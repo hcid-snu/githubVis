@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<style type="text/css">
+			p {
+				font-size: 20px;
+				color: orangered;
+			}
+		</style>
+	</head>
+	<body>
+		<script src="http://d3js.org/d3.v3.min.js"></script>
+		<div id="example1"></div>
+			<div>
+				<p>Already existing paragraph 1</p>
+			</div>
+			<div>
+				<p>Already existing paragraph 2</p>
+			</div>
+		<script type="text/javascript">
+			var tmp;
+			pdata = [10,12,6,8,15];
+
+			selectDIV = d3.select("#example1");
+
+			tmp = selectDIV.select("div").data(pdata);
+		</script>
+	</body>
+</html>

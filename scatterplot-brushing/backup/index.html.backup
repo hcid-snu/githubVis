@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<meta
+charset="utf-8">
+    <style>
+        svg {
+            font: 10px sans-serif;
+            padding: 10px;
+        }
+        .axis, .frame {
+            shape-rendering: crispEdges;
+        }
+        .axis line {
+            stroke: #ddd;
+        }
+        .axis path {
+            display: none;
+        }
+        .frame {
+            fill: none;
+            stroke: #aaa;
+        }
+        circle {
+            fill-opacity: .7;
+        }
+        circle.hidden {
+            fill: #ccc !important;
+        }
+        .extent {
+            fill: #000;
+            fill-opacity: .125;
+            stroke: #fff;
+        }
+    </style>
+
+    <body>
+        <script
+        src="http://d3js.org/d3.v3.min.js"></script>
+            <script>
+                var width = 960,
+                    size = 150,
+                    padding = 19.5;
+
+                // below functions allow us to easily lay out the points in the viewpoints.
+                var x = d3.scale.linear()
+                    .range([padding / 2, size - padding / 2]);   // x as a function that accepts number between padding/2=9.75 and (size-padding/2=140.25)
+
+                var y = d3.scale.linear()
+                    .range([size - padding / 2, padding / 2]);  // y as a function the accepts number b/w 140.25, 9.75. largest data point to 9.75 and smallest one to 140.25. This because the reverse mapping.
+
+                // The constructor the scale object. 
+                // because the scale has been passed to the axis, it knows how big it needs to be (the range of the scale)
+                var xAxis = d3.svg.axis()
+                    .scale(x)
+                    .orient("bottom")
+                    .ticks(5);
+
+                var yAxis = d3.svg.axis()
+                    .scale(y)
+                    .orient("left")
+                    .ticks(5);
+
+                var color = d3.scale.category10();
+
+                d3.csv("flowers.csv", function (error, data) {
+                    var domainByTrait = {},
+                        traits = d3.keys(data[0]).filter(function (d) {  // csv의 헤더를 읽여들인 후, 헤더 중 species가 아닌 것들만 return 받는다.
+                            return d !== "species";
+                        }),
+                        n = traits.length;
+                    //console.log(traits);
+                    traits.forEach(function (trait) {
+                        domainByTrait[trait] = d3.extent(data, function (d) { //d3.extend(data,accessor), returns the min and the max value of its args, the second arg to extent is an accessor function that choose which attributes of the data to use when calculating the min and max. 
+                            return d[trait];
+                        });
+                    }); // domaininByTrait에는 데이터의 min값과 max값이 들어간다. range를 돌려주는 듯.
+                    //console.log(domainByTrait);
+
+                    xAxis.tickSize(size * n);
+                    yAxis.tickSize(-size * n);
+
+                    var brush = d3.svg.brush()
+                        .x(x)
+                        .y(y)
+                        .on("brushstart", brushstart)
+                        .on("brush", brushmove)
+                        .on("brushend", brushend);
+
+                    var svg = d3.select("body").append("svg") //select body element and append "svg" element with attributes width and height. size and padding variables are defined above as a global.
+                        .attr("width", size * n + padding)
+                        .attr("height", size * n + padding)
+                        .append("g") // and append "g" element with attributes "transform" <- what is "g" and "transform"?
+                                    // "g" stands for "group". use g elements to group together other elements. 
+                        .attr("transform", "translate(" + padding + "," + padding / 2 + ")"); //SVG transform take an existing element and either rotates them or moves them around.
+                        // The translate transform just moves elements around; 
+
+                    svg.selectAll(".x.axis")
+                        .data(traits)
+                        .enter().append("g")
+                        .attr("class", "x axis")
+                        .attr("transform", function (d, i) {
+
+                            return "translate(" + (n - i - 1) * size + ",0)";
+                        })
+                        .each(function (d) {
+                          // d: 0~3 , 
+                          // console.log(domainByTrait): min~max
+                            x.domain(domainByTrait[d]);
+                            d3.select(this).call(xAxis);
+                        });
+
+                    svg.selectAll(".y.axis")
+                        .data(traits)
+                        .enter().append("g")
+                        .attr("class", "y axis")
+                        .attr("transform", function (d, i) {
+                            return "translate(0," + i * size + ")";
+                        })
+                        .each(function (d) {
+                            y.domain(domainByTrait[d]);
+                            d3.select(this).call(yAxis);
+                        });
+
+                    var cell = svg.selectAll(".cell")
+                        .data(cross(traits, traits))
+                        .enter().append("g")
+                        .attr("class", "cell")
+                        .attr("transform", function (d) {
+                            return "translate(" + (n - d.i - 1) * size + "," + d.j * size + ")";
+                        })
+                        .each(plot);
+
+                    // Titles for the diagonal.
+                    cell.filter(function (d) {
+                        return d.i === d.j;
+                    }).append("text")
+                        .attr("x", padding)
+                        .attr("y", padding)
+                        .attr("dy", ".71em")
+                        .text(function (d) {
+                            return d.x;
+                        });
+
+                    function plot(p) {
+                        var cell = d3.select(this);
+
+                        x.domain(domainByTrait[p.x]);
+                        y.domain(domainByTrait[p.y]);
+
+                        cell.append("rect")
+                            .attr("class", "frame")
+                            .attr("x", padding / 2)
+                            .attr("y", padding / 2)
+                            .attr("width", size - padding)
+                            .attr("height", size - padding);
+
+                        cell.selectAll("circle")
+                            .data(data)
+                            .enter().append("circle")
+                            .attr("cx", function (d) {
+                                return x(d[p.x]);
+                            })
+                            .attr("cy", function (d) {
+                                return y(d[p.y]);
+                            })
+                            .attr("r", 3)
+                            .style("fill", function (d) {
+                                return color(d.species);
+                            });
+
+                        cell.call(brush);
+                    }
+
+                    var brushCell;
+
+                    // Clear the previously-active brush, if any.
+
+                    function brushstart(p) {
+                      //console.log(p): Object{x:"sepal length", i:0, y:"sepal width", j: 1}
+                        if (brushCell !== p) {
+                            cell.call(brush.clear());
+                            x.domain(domainByTrait[p.x]);
+                            y.domain(domainByTrait[p.y]);
+                            brushCell = p;
+                        }
+                    }
+
+                    // Highlight the selected circles.
+
+                    function brushmove(p) {
+                        var e = brush.extent();
+                        svg.selectAll("circle").classed("hidden", function (d) {
+                            return e[0][0] > d[p.x] || d[p.x] > e[1][0] || e[0][1] > d[p.y] || d[p.y] > e[1][1];
+                        });
+                    }
+
+                    // If the brush is empty, select all circles.
+
+                    function brushend() {
+                        if (brush.empty()) svg.selectAll(".hidden").classed("hidden", false);
+                    }
+
+                    function cross(a, b) {
+                        var c = [],
+                            n = a.length,
+                            m = b.length,
+                            i, j;
+                        for (i = -1; ++i < n;)
+                            for (j = -1; ++j < m;) c.push({
+                                x: a[i],
+                                i: i,
+                                y: b[j],
+                                j: j
+                            });
+                        return c;
+                    }
+
+                    d3.select(self.frameElement).style("height", size * n + padding + 20 + "px");
+                });
+            </script>
