@@ -1,0 +1,126 @@
+function barChart(){
+
+	if(!barChart.id) barChart.id = 0;
+
+	var margin = {top: 10, bottom: 40, left: 10, right: 20}, // default margin
+		width = 960, // default width
+		height = 150; // default height
+
+	var dataframe;
+
+	var xScale = d3.scale.ordinal().rangeRoundBands([0,500],.1), // need to set the domain of x
+		yScale = d3.scale.linear();
+
+	var xAxis = d3.svg.axis().orient("bottom"),
+		brush = d3.svg.brush();
+
+	var brushDirty,
+		id = barChart.id++;
+
+
+	function chart(selection){
+		selection.each(function(){
+			
+			var div = d3.select(this),
+				g = div.select("g");
+			
+			//xScale.range([0,width - margin.left - margin.right]);
+			yScale.range([(height - margin.top - margin.bottom), 0]);
+			yScale.domain([0,200]);
+			//yScale.domain()
+			xScale.domain(dataframe.map(function(d){return d.primary_key;}));
+			xAxis.scale(xScale).tickSubdivide(true).tickPadding(1);	      
+
+			//Create the skeletal chart.
+			if(g.empty()) {
+				div.select(".title").append("a")
+					.attr("href","javascript:reset(" + id + ")")
+					.attr("class","reset")
+					.attr("text","reset")
+					.style("display","none");
+				g = div.append("svg")
+					.attr("width",width + margin.left + margin.right)
+					.attr("height",height + margin.top + margin.bottom)
+					.append("g")
+					.attr("transform","translate(" + margin.left +","+ margin.top + ")");
+
+				g.append("clipPath")
+					.attr("id","clip-",+id)
+				.append("rect")
+					.attr("width",width)
+					.attr("ehgith",height);
+
+				g.selectAll(".bar")
+					.data(["background","foreground"])
+				 .enter().append("path")
+				 	.attr("class",function(d) {return d + " bar"; })
+				 	.datum(dataframe); // <- do not understand here. 
+
+				g.selectAll(".foreground.bar")
+					.attr("clip-path","url(#clip-" + id + ")");
+
+				g.append("g")
+					.attr("class","axis")
+					.attr("transform","translate(0," + height + ")")
+					.call(xAxis);
+			}
+
+			g.selectAll(".bar").attr("d", barPath);
+		});
+		
+		function barPath()
+		{
+			// bar draw function here. ref the crossfilter code. 
+			var path = [],
+            	i = -1,
+            	n = dataframe.length,
+            	d;
+        
+        	while (++i < n) {
+          		d = dataframe[i];
+          		//console.log(d.comments);
+          		path.push("M", xScale(d.primary_key), ",", height, "V", yScale(d.comments), "h4V", height); //h9 : bar width
+          		//path.push("M",xpos in x,",",chart height,"V",ypos in y,"h'width'V",height)
+          		// y is calculated by (height-ypos)
+        	}
+
+        	return path.join("");
+		}
+
+		
+
+	}
+
+	chart.width = function(_){
+		if(!arguments.length) return width; // chart.width의 인자로 아무것도 안들어왔을 경우는, default width를 return
+		width = _;
+		return chart;
+	};
+
+	chart.height = function(_){
+		if(!arguments.length) return height; 
+		height = _;
+		return chart;
+	};
+
+	chart.xScale= function(_){
+		if(!arguments.length) return xScale;
+		xScale = _;
+		xAxis.scale(xScale);
+		return chart;
+	};
+
+	chart.yScale = function(_){
+		if(!arguments.length) return yScale;
+		yScale = _;
+		return chart;
+	};
+
+	chart.dataframe = function(_){
+		if(!arguments.length) return dataframe;
+		dataframe = _;
+		return chart;
+	};
+	
+	return chart;
+}

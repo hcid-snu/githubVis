@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<link rel="stylesheet" type="text/css" href="temp.css"/>
+	</head>	
+	<body style>
+		<div id="body">
+			<h1> Github user activity</h1>
+			<div id="graph-container">
+				<div id="chart1" class="chart">
+					<div class="title">Comments</div>
+				</div>
+				<div id="chart2" class="chart">
+					<div class="title">Commits</div>
+				</div>
+				<div id="chart3" class="chart">
+					<div class="title">Issues</div>
+				</div>
+				<div id="chart4" class="chart">
+					<div class="title">Pulls</div>
+				</div>
+			</div>
+		</div>
+		
+		<script src="d3.v3.min.js"></script>
+		<script src="mychart.js"></script>
+		<script>
+			var dd; //[DEBUG] for debuging
+
+			d3.csv("merged-mbostock.csv",function(error,data){
+				dd = data; // [DEBUG] for debugging
+
+				// a little coercion, since the CSV is untyped.				
+				data.forEach(function(d,i){
+					d.comments = +d.comments;
+					d.commits = +d.commits;
+					d.issues = +d.issues;
+					d.pulls = +d.pulls;
+					d.index = i;
+				});
+
+				// Create variables and functions for the data filtering
+				var colnames = d3.keys(data[0]).filter(function (d) {
+                            return d !== "names" && d !== "index";
+                        }),
+					func1 = function(data,colname) {
+							return [ data[colname], data.primary_key ];
+						};
+
+				// Get a # of each attributes. zero count is excluded. 		
+				var comments = data.filter(function(row){ return row.comments > 0;}).map(function(d){ return [d.comments, d.primary_key, d.index];}),
+					commits = data.filter(function(row){ return row.commits > 0;}).map(function(d){ return [d.commits, d.primary_key, d.index];}),
+					issues = data.filter(function(row){ return row.issues > 0;}).map(function(d){ return [d.issues, d.primary_key, d.index];}),
+					pulls = data.filter(function(row){ return row.pulls > 0;}).map(function(d){ return [d.pulls, d.primary_key, d.index];});
+				
+				// Chart Array
+				// datum[0]: value, datum[1]: primary_key, datum[2]: index
+				var charts = [
+
+					myChart().datum(comments) 
+							.xScale(d3.scale.ordinal()
+								.rangeRoundBands([0,comments.length*9 + comments.length*1],0,0)
+								.domain(comments.map(function(d){ return d[1]; }))),
+
+					myChart().datum(commits)
+							.xScale(d3.scale.ordinal()
+										.rangeRoundBands([0,commits.length*9 + commits.length*1],0,0)
+										.domain(commits.map(function(d){ return d[1]; }))),
+										
+					myChart().datum(issues)
+							.xScale(d3.scale.ordinal()
+										.rangeRoundBands([0,issues.length*9 + issues.length*1],0,0)
+										.domain(issues.map(function(d){ return d[1]; }))),
+										
+					myChart().datum(pulls)
+							.xScale(d3.scale.ordinal()
+										.rangeRoundBands([0,pulls.length*9 + pulls.length*1],0,0)
+										.domain(pulls.map(function(d){ return d[1];} )))
+										
+				];
+
+				chart = d3.selectAll(".chart")
+						.data(charts)
+						.each(function(chart) { chart.on("brush", renderAll).on("brushend", renderAll); });
+						
+				renderAll();
+
+				function render(method) {
+				    d3.select(this).call(method);
+				}
+
+				// Whenever the brush moves, re-rendering everything.
+				function renderAll() {
+				    chart.each(render);
+				}
+
+				 window.filter = function(filters) {
+    				filters.forEach(function(d, i) { charts[i].filter(d); });
+				    renderAll();
+				};
+
+				window.reset = function(i) {
+				    charts[i].filter(null);
+				    renderAll();
+				};
+
+			});
+		</script>
+	</body>
+</html>
