@@ -27,7 +27,7 @@
 		<script src="mychart.js"></script>
 		<script>
 			var dd; //[DEBUG] for debuging
-
+			var comments,commits,issues,pulls;
 			d3.csv("merged-mbostock.csv",function(error,data){
 				dd = data; // [DEBUG] for debugging
 
@@ -49,7 +49,8 @@
 						};
 
 				// Get a # of each attributes. zero count is excluded. 		
-				var comments = data.filter(function(row){ return row.comments > 0;}).map(function(d){ return [d.comments, d.primary_key, d.index];}),
+				//var comments = data.filter(function(row){ return row.comments > 0;}).map(function(d){ return [d.comments, d.primary_key, d.index];}),
+				comments = data.filter(function(row){ return row.comments > 0;}).map(function(d){ return [d.comments, d.primary_key, d.index];}),
 					commits = data.filter(function(row){ return row.commits > 0;}).map(function(d){ return [d.commits, d.primary_key, d.index];}),
 					issues = data.filter(function(row){ return row.issues > 0;}).map(function(d){ return [d.issues, d.primary_key, d.index];}),
 					pulls = data.filter(function(row){ return row.pulls > 0;}).map(function(d){ return [d.pulls, d.primary_key, d.index];});

@@ -4,7 +4,7 @@ function myChart() {
 
 	var margin = {top: 10, right: 20, bottom: 20, left: 20},
 		id = myChart.id++,
-		w = 900,
+		w = 700,
 		h = 150,
 		xScale,
 		yScale = d3.scale.linear().range([h , 0]),

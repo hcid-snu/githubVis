@@ -102,6 +102,11 @@ h1, h2 {
   stroke: #f00;
 }
 
+div .chart{
+  width: 600px;
+  height: 220px;
+  overflow: auto;
+}
 
 aside {
   position: absolute;
