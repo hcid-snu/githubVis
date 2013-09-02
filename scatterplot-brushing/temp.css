@@ -47,8 +47,8 @@ h1, h2 {
 
 .chart {
   display: inline-block;
-  height: 151px;
-  margin-bottom: 50px;
+  height: 200px;
+  margin-bottom: 2px;
 }
 
 .reset {
@@ -72,7 +72,7 @@ h1, h2 {
 }
 
 .axis text {
-  font: 10px sans-serif;
+  font: 2px sans-serif;
 }
 
 .bar {
@@ -104,7 +104,7 @@ h1, h2 {
 
 div .chart{
   width: 600px;
-  height: 220px;
+  height: 400px;
   overflow: auto;
 }
 

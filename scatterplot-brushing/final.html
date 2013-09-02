@@ -50,10 +50,16 @@
 
 				// Get a # of each attributes. zero count is excluded. 		
 				//var comments = data.filter(function(row){ return row.comments > 0;}).map(function(d){ return [d.comments, d.primary_key, d.index];}),
-				comments = data.filter(function(row){ return row.comments > 0;}).map(function(d){ return [d.comments, d.primary_key, d.index];}),
-					commits = data.filter(function(row){ return row.commits > 0;}).map(function(d){ return [d.commits, d.primary_key, d.index];}),
-					issues = data.filter(function(row){ return row.issues > 0;}).map(function(d){ return [d.issues, d.primary_key, d.index];}),
-					pulls = data.filter(function(row){ return row.pulls > 0;}).map(function(d){ return [d.pulls, d.primary_key, d.index];});
+				comments = data.filter(function(row){ return row.comments > 0;}).map(function(d){ return [d.comments, d.primary_key, d.index, d.names];}),
+				commits = data.filter(function(row){ return row.commits > 0;}).map(function(d){ return [d.commits, d.primary_key, d.index,d.names];}),
+				issues = data.filter(function(row){ return row.issues > 0;}).map(function(d){ return [d.issues, d.primary_key, d.index,d.names];}),
+				pulls = data.filter(function(row){ return row.pulls > 0;}).map(function(d){ return [d.pulls, d.primary_key, d.index,d.names];});
+
+				// Sort by descending order
+				comments = comments.sort(function(a,b){return d3.descending(a[0],b[0])});
+				commits = commits.sort(function(a,b){return d3.descending(a[0],b[0])});
+				issues = issues.sort(function(a,b){return d3.descending(a[0],b[0])});
+				pulls = pulls.sort(function(a,b){return d3.descending(a[0],b[0])});
 				
 				// Chart Array
 				// datum[0]: value, datum[1]: primary_key, datum[2]: index
@@ -84,7 +90,7 @@
 				chart = d3.selectAll(".chart")
 						.data(charts)
 						.each(function(chart) { chart.on("brush", renderAll).on("brushend", renderAll); });
-						
+
 				renderAll();
 
 				function render(method) {

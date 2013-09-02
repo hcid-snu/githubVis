@@ -5,7 +5,8 @@ function myChart() {
 	var margin = {top: 10, right: 20, bottom: 20, left: 20},
 		id = myChart.id++,
 		w = 700,
-		h = 150,
+		h = 200,
+		h2 = 250,
 		xScale,
 		yScale = d3.scale.linear().range([h , 0]),
 		xAxis = d3.svg.axis().orient("bottom"),
@@ -16,6 +17,7 @@ function myChart() {
 	function chart(selection) {
 
 		yScale.domain([0, Math.log(d3.max(datum, function(d){ return d[0]; }))+.1]);
+		//yScale.domain([0, 2]);
 
 		selection.each(function() {
 			var div = d3.select(this)
@@ -23,6 +25,8 @@ function myChart() {
 
 			// Create the skeletal chart.
 			if(g.empty()) {
+				var dd = datum;
+
 				div.select(".title").append("a")
 					.attr("href","javascript:reset(" + id + ")")
 					.attr("class", "reset")
@@ -31,7 +35,8 @@ function myChart() {
 
 				g = div.append("svg")
 							.attr("width", w + margin.left + margin.right)
-							.attr("height",	h + margin.top + margin.bottom)
+							.attr("height",	h2 + margin.top + margin.bottom)
+
 						.append("g")
 							.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -44,7 +49,15 @@ function myChart() {
 				g.append("g")
 					.attr("class", "axis")
 					.attr("transform","translate(0," + h + ")")
-					.call(xAxis);
+					.call(xAxis)
+					.selectAll("text")  
+			            .style("text-anchor", "end")
+			            .style("font-size","1px")
+			            .attr("dx", "-.8em")
+			            .attr("dy", ".15em")
+			            .attr("transform", function(d) {
+               					return "rotate(-65)" 
+                			});
 
 				// draw bar here
 				var bars = g.selectAll(".bar").data(datum)
@@ -54,6 +67,24 @@ function myChart() {
 						.attr("width", 4)
 						.attr("y", function(d) {return yScale(Math.log(d[0]+.1)); })
 						.attr("height", function(d) { return h - yScale(Math.log(d[0]+.11)); });
+
+				// draw text(name) here
+				var texts = g.selectAll(".tnode").data(datum)
+							.enter().append("text")
+							.attr("class","tnode")
+							.attr("x", function(d,i) { return xScale(d[1]); })
+							.attr("y", function(d) {return yScale(Math.log(d[0]+.1)); })
+							.attr("transform",function(d){
+									 return "rotate(-45 " + xScale(d[1]) +" "+yScale(Math.log(d[0]+.1))+")"})
+							.attr("text-anchor","start")
+							.text(function(d,i) {
+								if(d[0] < 2){
+									return "";
+								}else{
+									return d[3];
+								}
+							});
+				
 
 				// Initialize the brush component with pretty resize handles.
 				var gBrush = g.append("g").attr("class", "brush").call(brush);
