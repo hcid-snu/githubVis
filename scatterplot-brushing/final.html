@@ -47,7 +47,7 @@
 					func1 = function(data,colname) {
 							return [ data[colname], data.primary_key ];
 						};
-
+				
 				// Get a # of each attributes. zero count is excluded. 		
 				//var comments = data.filter(function(row){ return row.comments > 0;}).map(function(d){ return [d.comments, d.primary_key, d.index];}),
 				comments = data.filter(function(row){ return row.comments > 0;}).map(function(d){ return [d.comments, d.primary_key, d.index, d.names];}),
